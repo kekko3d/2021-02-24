@@ -7,8 +7,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import it.polito.tdp.PremierLeague.model.Action;
+import it.polito.tdp.PremierLeague.model.Adiacenza;
 import it.polito.tdp.PremierLeague.model.Match;
 import it.polito.tdp.PremierLeague.model.Player;
+import it.polito.tdp.PremierLeague.model.PlayerAndPeso;
 import it.polito.tdp.PremierLeague.model.Team;
 
 public class PremierLeagueDAO {
@@ -110,5 +112,100 @@ public class PremierLeagueDAO {
 			return null;
 		}
 	}
+	
+	public List<Player> listPlayerMatch(Integer idMatch){
+		String sql = "SELECT DISTINCT(p.`PlayerID`), p.`Name` "
+				+ "FROM Players p, Matches m, Actions a "
+				+ "WHERE p.`PlayerID` = a.`PlayerID`  "
+				+ "AND a.`MatchID` = ? ";
+		List<Player> result = new ArrayList<Player>();
+		Connection conn = DBConnect.getConnection();
+		
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, idMatch);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				Player player = new Player(res.getInt("PlayerID"), res.getString("Name"));
+				result.add(player);
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
+	public List<Adiacenza> Adiacenze(Integer idMatch){
+		String sql = "SELECT p1.`PlayerID` as id1, p2.`PlayerID` as id2 , ((a1.`TotalSuccessfulPassesAll` + a1.`Assists`)/a1.`TimePlayed`) - ((a2.`TotalSuccessfulPassesAll` + a2.`Assists`)/a2.`TimePlayed`) as peso "
+				+ "FROM Players p1, Players p2 , Matches m, Actions a1, Actions a2 "
+				+ "WHERE p1.`PlayerID` = a1.`PlayerID` "
+				+ "AND p2.`PlayerID` = a2.`PlayerID`  "
+				+ "AND a1.`MatchID` = ? AND a2.`MatchID` = ? "
+				+ "AND a1.`TeamID` > a2.`TeamID` "
+				+ "GROUP BY id1, id2 ";
+		
+		List<Adiacenza> result = new ArrayList<Adiacenza>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, idMatch);
+			st.setInt(2, idMatch);
+			ResultSet res = st.executeQuery();
+
+
+
+			while (res.next()) {
+
+				Adiacenza player = new Adiacenza(res.getInt("id1"), res.getInt("id2"), res.getDouble("peso"));
+				result.add(player);
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
+	public Integer getId(Match m, Player p){
+		String sql = "SELECT DISTINCT(a.`TeamID`) as id "
+				+ "FROM Actions a, Matches m "
+				+ "WHERE m.`MatchID` = ? "
+				+ "AND a.`PlayerID` =  ? "
+				+ "AND a.`MatchID` = m.`MatchID` ";
+		
+		Integer result = 0;
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, m.getMatchID());
+			st.setInt(2, p.getPlayerID());
+			ResultSet res = st.executeQuery();
+
+
+
+			while (res.next()) {
+
+				result = res.getInt("id");
+			}
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
 	
 }

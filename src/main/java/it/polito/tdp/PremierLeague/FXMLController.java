@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 
 import it.polito.tdp.PremierLeague.model.Match;
 import it.polito.tdp.PremierLeague.model.Model;
+import it.polito.tdp.PremierLeague.model.PlayerAndPeso;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -47,16 +48,64 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-    	
+    	if(cmbMatch.getValue() == null) {
+    		txtResult.setText("Selezione un match");
+    		return;
+    	}
+    	model.creaGrafo(cmbMatch.getValue().getMatchID());
+    	txtResult.appendText("Grafo creato:");
+    	txtResult.appendText('\n'+"Vertici: " + model.getNVertici());
+    	txtResult.appendText('\n'+"Adiacenze: " + model.getNAdiacenze());
+
+    
     }
 
     @FXML
-    void doGiocatoreMigliore(ActionEvent event) {    	
+    void doGiocatoreMigliore(ActionEvent event) {  
+    	if(model.getNVertici() == 0) {
+    		txtResult.appendText("crea il grafo");
+    		return;	
+    	}
+    	PlayerAndPeso best = model.getBestPlayer();
+    	txtResult.setText("miglior giocatore:  " + best.getPlayer().getPlayerID() + ", "+ best.getPlayer().getName() + "  punteggio:  " + best.getPeso());
     	
     }
     
     @FXML
     void doSimula(ActionEvent event) {
+    	Integer k = 0;
+
+    	if(txtN.getText().compareTo("") == 0) {
+
+    		txtN.setText("inserisci un numero di azioni salienti");
+
+    		return;
+
+    	}
+
+    	try {
+
+    		k =Integer.parseInt(txtN.getText());
+
+    	} catch (NumberFormatException n) {
+
+    		txtResult.setText("il numero di azioni salienti deve essere indicato con delle cifre  e deve essere intero");
+
+    		return;
+
+    	}
+    	if(cmbMatch.getValue() == null) {
+    		txtResult.setText("Selezione un match");
+    		return;
+    	}
+    	model.sim(k, cmbMatch.getValue().getMatchID());
+    	txtResult.setText("PunteggioAway: " + model.getPunteggioAway() + '\n');
+    	txtResult.appendText("PunteggioHome: " + model.getPunteggioHome() + '\n' );
+    	txtResult.appendText("espulsioneAway: " + model.getEspulsioneAway() + '\n' );
+    	txtResult.appendText("espulsioneHome: " + model.getEspulsioneHome() + '\n');
+    	model.azzeraContatore();
+
+    	    	
 
     }
 
@@ -73,5 +122,8 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	cmbMatch.getItems().addAll(this.model.getMatch());
+
+
     }
 }
